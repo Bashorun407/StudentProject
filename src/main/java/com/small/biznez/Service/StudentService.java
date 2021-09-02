@@ -165,6 +165,36 @@ public class StudentService {
         return responsePojo;
     }
 
+    //Repeating search here using Querydsl just to practice what I've learnt
+    public ResponsePojo<Page<Student>> searchStudent(String firstName, String lastName, String matricNumber, Pageable pageable){
+        QStudent qStudent = QStudent.student;
+        BooleanBuilder predicate = new BooleanBuilder();
+
+        if(StringUtils.hasText(firstName))
+            predicate.and(qStudent.fname.likeIgnoreCase("%" + firstName +"%"));
+
+        if(StringUtils.hasText(lastName))
+            predicate.and(qStudent.lname.likeIgnoreCase("%" + lastName + "%"));
+
+        if(StringUtils.hasText(matricNumber))
+            predicate.and(qStudent.matricNo.equalsIgnoreCase(matricNumber));
+
+        JPAQueryFactory jpaQueryFactory = new JPAQueryFactory(entityManager);
+        JPAQuery<Student> jpaQuery = jpaQueryFactory.selectFrom(qStudent)
+                .where(predicate)
+                .orderBy(qStudent.id.asc())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize());
+
+        Page<Student> studentPage =new PageImpl<>(jpaQuery.fetch(), pageable, jpaQuery.fetchCount());
+
+        ResponsePojo<Page<Student>> responsePojo = new ResponsePojo<>();
+        responsePojo.setData(studentPage);
+        responsePojo.setMessage("Students Search Successful!!");
+
+        return responsePojo;
+    }
+
 
     //To update Student details
     public ResponsePojo<Student> updateStudent(StudentDto studentDto){

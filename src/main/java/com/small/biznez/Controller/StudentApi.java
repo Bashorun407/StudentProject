@@ -59,8 +59,16 @@ public class StudentApi {
         return studentService.dynamicSearch(firstName, lastName, matricNumber, pageable);
     }
 
+    //Repeating search here using Querydsl just to practice what I've learnt
+    @GetMapping("/searchStudent")
+    public ResponsePojo<Page<Student>> searchStudent(@RequestParam(name = "firstName", required = false) String firstName,
+                                                     @RequestParam(name = "lastName", required = false) String lastName,
+                                                     @RequestParam(name = "matricNumber", required = false) String matricNumber,
+                                                     Pageable pageable){
+        return studentService.searchStudent(firstName, lastName, matricNumber, pageable);
+    }
 
-    @PutMapping("/updateStudent")
+        @PutMapping("/updateStudent")
     public ResponsePojo<Student> updateStudent(@RequestBody StudentDto studentDto){
         return studentService.updateStudent(studentDto);
     }
