@@ -1,15 +1,20 @@
 package com.small.biznez.Controller;
 
+import com.querydsl.core.BooleanBuilder;
 import com.small.biznez.Dto.StudentDto;
+import com.small.biznez.Entity.QStudent;
 import com.small.biznez.Entity.Student;
+import com.small.biznez.Exception.ApiException;
 import com.small.biznez.ResponsePojo.ResponsePojo;
 import com.small.biznez.Service.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/students")
@@ -80,4 +85,32 @@ public class StudentApi {
         return studentService.adminUpdate(studentDto);
     }
 
+    //writing another multiple search just to check that I remember the codes
+    @GetMapping("/multipleSearch")
+    public ResponsePojo<Page<Student>> multipleSearch(@RequestParam(name = "firstName", required = false) String firstName,
+                                                      @RequestParam(name = "lastName", required = false) String lastName,
+                                                      @RequestParam(name = "matricNo", required = false) String matricNo,
+                                                      Pageable pageable){
+        return studentService.multipleSearch(firstName, lastName, matricNo, pageable);
+    }
+
+    //Writing another update just for the sake of practice
+    @PutMapping("/secondUpdate")
+    public ResponsePojo<Student> secondUpdate(@RequestBody StudentDto studentDto){
+        return studentService.secondUpdate(studentDto);
+    }
+
+
+    //Just a querydsl version of search student by id
+    @GetMapping("/usingId/{id}")
+    public ResponsePojo<Student> getStudentUsingId(@PathVariable Long id){
+        return studentService.getStudentUsingId(id);
+    }
+
+
+    //method to return a list of students
+    @GetMapping("/allStudents")
+    public ResponsePojo<Page<Student>> allStudents(Pageable pageable){
+        return studentService.allStudents(pageable);
+    }
 }

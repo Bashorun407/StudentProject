@@ -231,12 +231,15 @@ public class StudentService {
         Optional<Student> studentOptional1= studentReppo.findById(studentDto.getId());
         studentOptional1.orElseThrow(()->new ApiException(String.format("Student with this ID %s not found!",
                 studentDto.getId())));
+
         Optional<Student> studentOptional2= studentReppo.findBymatricNo(studentDto.getMatricNo());
         studentOptional2.orElseThrow(() -> new ApiException(String.format("Student with this Matric Number %s Not Found!!",
                 studentDto.getMatricNo())));
 
-        if(studentOptional1!=studentOptional2)
-            throw  new ApiException("Matric Number Entered for update is for another student!!");
+        Student record1=studentOptional1.get();
+        Student record2 = studentOptional2.get();
+        if(record1!=record2)
+            throw new ApiException("Matric Number Entered for update is for another student!!");
 
         Student student = studentOptional1.get();
 
@@ -245,7 +248,7 @@ public class StudentService {
         student.setMatricNo(studentDto.getMatricNo());
         student.setCourse(studentDto.getCourse());
 
-        Student newStudent = student;
+        Student newStudent = studentReppo.save(student);
 
         ResponsePojo<Student> responsePojo = new ResponsePojo<>();
         responsePojo.setData(newStudent);
@@ -255,6 +258,134 @@ public class StudentService {
         return responsePojo;
     }
 
+    //writing another multiple search just to check that I remember the codes
+    public ResponsePojo<Page<Student>> multipleSearch(String firstName, String lastName, String matricNo, Pageable pageable){
 
+        QStudent qStudent = QStudent.student;
+        BooleanBuilder predicate = new BooleanBuilder();
+
+        if(StringUtils.hasText(firstName))
+            predicate.and(qStudent.fname.likeIgnoreCase("%" + firstName+ "%"));
+
+        if(StringUtils.hasText(lastName))
+            predicate.and(qStudent.lname.likeIgnoreCase("%" + lastName + "%"));
+
+        if (StringUtils.hasText(matricNo))
+            predicate.and(qStudent.matricNo.equalsIgnoreCase(matricNo));
+
+        JPAQueryFactory jpaQueryFactory = new JPAQueryFactory(entityManager);
+        JPAQuery<Student> jpaQuery = jpaQueryFactory.selectFrom(qStudent)
+                .where(predicate)
+                .orderBy(qStudent.id.desc())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize());
+
+        Page<Student> studentPage = new PageImpl<>(jpaQuery.fetch(), pageable, jpaQuery.fetchCount());
+
+        ResponsePojo<Page<Student>> responsePojo = new ResponsePojo<>();
+        responsePojo.setData(studentPage);
+        responsePojo.setMessage("Student detail(s) found!!");
+
+        return responsePojo;
+
+    }
+
+    //Writing another update just for the sake of practice
+    public ResponsePojo<Student> secondUpdate(StudentDto studentDto){
+        if(ObjectUtils.isEmpty(studentDto.getMatricNo()))
+            throw new ApiException("Update requires a valid matric number...enter correct Matric Number!");
+
+        Optional<Student> studentOptional1= studentReppo.findById(studentDto.getId());
+        studentOptional1.orElseThrow(()-> new ApiException(String.format("Student with this Id %s not found!!",
+                studentDto.getId())));
+
+        Optional<Student> studentOptional2 = studentReppo.findBymatricNo(studentDto.getMatricNo());
+        studentOptional2.orElseThrow(()-> new ApiException(String.format("Student with matric number %s not found!!",
+                studentDto.getMatricNo())));
+
+        Student record1 =studentOptional1.get();
+        Student record2 = studentOptional2.get();
+        if(record1!=record2)
+            throw new ApiException("The matric number entered is for a different Student!!");
+
+        Student student = studentOptional1.get();
+        student.setFname(studentDto.getFname());
+        student.setLname(studentDto.getLname());
+        student.setMatricNo(studentDto.getMatricNo());
+        student.setCourse(studentDto.getCourse());
+
+        Student newStudent = studentReppo.save(student);
+
+        ResponsePojo<Student> responsePojo = new ResponsePojo<>();
+        responsePojo.setData(newStudent);
+        responsePojo.setMessage("Student details updated successfully!");
+
+        return responsePojo;
+
+    }
+
+    //Just a querydsl version of search student by id
+    public ResponsePojo<Student> getStudentUsingId(Long id){
+
+        //Introducing Querydsl and predicate
+        QStudent qStudent = QStudent.student;
+        BooleanBuilder predicate = new BooleanBuilder();
+
+        //Conditional if no id is entered
+        if (ObjectUtils.isEmpty(id))
+            throw new ApiException("Id is Empty...please input valid Id");
+
+        //Conditional if incorrect id is entered
+        Optional<Student> studentOptional = studentReppo.findById(id);
+        studentOptional.orElseThrow(()->new ApiException(String.format("No Student with the Id %s found !!", id)));
+
+        //Conditional if a correct Id is entered
+        if(!ObjectUtils.isEmpty(id))
+            predicate.and(qStudent.id.eq(id));
+
+        //Introducing JpaQuery to query/search the database for the student with the specified id
+        JPAQueryFactory jpaQueryFactory = new JPAQueryFactory(entityManager);
+        JPAQuery<Student> jpaQuery = jpaQueryFactory.selectFrom(qStudent)
+                .where(predicate)
+                .distinct();
+
+        Student foundStudent = jpaQuery.fetchOne();
+
+        //Introducing the Responsepojo
+        ResponsePojo<Student> responsePojo = new ResponsePojo<>();
+        responsePojo.setMessage("Student with the id specified found!!");
+        responsePojo.setData(foundStudent);
+
+        return responsePojo;
+    }
+
+    //method to return a list of students
+    public ResponsePojo<Page<Student>> allStudents(Pageable pageable){
+
+        List<Student> studentList = studentReppo.findAll();
+        if(studentList.isEmpty())
+            throw  new ApiException("No students found!!");
+
+        QStudent qStudent= QStudent.student;
+        BooleanBuilder predicate = new BooleanBuilder();
+        predicate.and(qStudent.id.isNotNull());
+
+        JPAQueryFactory jpaQueryFactory = new JPAQueryFactory(entityManager);
+        JPAQuery<Student> jpaQuery = jpaQueryFactory.selectFrom(qStudent)
+                .where(predicate)
+                .orderBy(qStudent.id.desc())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize());
+
+
+        Page<Student> page = new PageImpl<>(jpaQuery.fetch(), pageable, jpaQuery.fetchCount());
+
+        ResponsePojo<Page<Student>> responsePojo = new ResponsePojo<>();
+        responsePojo.setMessage("List of students found!!");
+        responsePojo.setData(page);
+
+        return responsePojo;
+
+    }
 
 }
