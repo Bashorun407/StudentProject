@@ -259,7 +259,7 @@ public class StudentService {
     }
 
     //writing another multiple search just to check that I remember the codes
-    public ResponsePojo<Page<Student>> multipleSearch(String firstName, String lastName, String matricNo, Pageable pageable){
+    public ResponsePojo<Page<Student>> multipleSearch(String firstName, String lastName, String matricNo, Pageable pageable, Long newLikes, Long love){
 
         QStudent qStudent = QStudent.student;
         BooleanBuilder predicate = new BooleanBuilder();
@@ -279,6 +279,25 @@ public class StudentService {
                 .orderBy(qStudent.id.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize());
+
+        //Writing the block of code to check that "Likes" can be added from the user
+        Long countLikes=jpaQuery.fetchFirst().getLikes();
+        Long countLove=jpaQuery.fetchFirst().getLove();
+        if(!ObjectUtils.isEmpty(newLikes)){
+            countLikes +=newLikes;
+            jpaQuery.fetchFirst().setLikes(countLikes);
+            Student student = jpaQuery.fetchFirst();
+            studentReppo.save(student);
+        }
+
+        //***Writing another block of code to check that "Love" can be added from the user
+        if (!ObjectUtils.isEmpty(love)) {
+            countLove += love;
+            jpaQuery.fetchFirst().setLove(countLove);
+            Student student = jpaQuery.fetchFirst();
+            studentReppo.save(student);
+        }
+
 
         Page<Student> studentPage = new PageImpl<>(jpaQuery.fetch(), pageable, jpaQuery.fetchCount());
 

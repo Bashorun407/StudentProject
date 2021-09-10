@@ -26,4 +26,11 @@ public class Student {
 
     @Column(name = "Matric_Number")
     private String matricNo;
+
+    @Column(name = "Likes_For_Student")
+    private Long likes;
+
+    @Column(name = "Love_For_Student")
+    private Long love;
 }
+

@@ -90,8 +90,10 @@ public class StudentApi {
     public ResponsePojo<Page<Student>> multipleSearch(@RequestParam(name = "firstName", required = false) String firstName,
                                                       @RequestParam(name = "lastName", required = false) String lastName,
                                                       @RequestParam(name = "matricNo", required = false) String matricNo,
+                                                      @RequestParam(name = "newLikes", required = false) Long newLikes,
+                                                      @RequestParam(name = "love", required = false) Long love,
                                                       Pageable pageable){
-        return studentService.multipleSearch(firstName, lastName, matricNo, pageable);
+        return studentService.multipleSearch(firstName, lastName, matricNo, pageable, newLikes, love);
     }
 
     //Writing another update just for the sake of practice

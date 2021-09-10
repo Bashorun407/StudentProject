@@ -17,4 +17,8 @@ public class StudentDto {
     private String course;
 
     private String  matricNo;
+
+    private Long likes;
+
+    private Long love;
 }
